@@ -1,0 +1,9 @@
+{
+  "model": "Qwen/Qwen3-1.7B-Base",
+  "num_examples": 25,
+  "rougeL_f1": 0.2192,
+  "bert_score_precision": 0.8545,
+  "bert_score_recall": 0.8582,
+  "bert_score_f1": 0.8559,
+  "average_latency_seconds": 11.5041
+}

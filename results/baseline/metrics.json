@@ -1,0 +1,8 @@
+{
+  "model": "Qwen/Qwen3-1.7B-Base",
+  "dataset": "data/processed/customer_support_sft",
+  "num_examples": 25,
+  "average_latency_seconds": 11.5041,
+  "total_inference_time_seconds": 287.6024,
+  "average_generated_tokens": 155.88
+}

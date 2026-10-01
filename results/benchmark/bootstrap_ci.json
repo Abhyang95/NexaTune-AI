@@ -1,0 +1,94 @@
+{
+  "benchmark": {
+    "n_examples": 100,
+    "n_bootstrap": 10000,
+    "seed": 42,
+    "confidence_level": 0.95
+  },
+  "comparisons": {
+    "base_vs_prompted": {
+      "comparison": "Base vs Prompted Base",
+      "n_examples": 100,
+      "n_bootstrap": 10000,
+      "seed": 42,
+      "rougeL": {
+        "first_mean": 0.21198429962857684,
+        "second_mean": 0.22278369249978958,
+        "observed_difference": 0.01079939287121277,
+        "confidence_level": 0.95,
+        "confidence_interval": {
+          "lower": -0.0036561600191382412,
+          "upper": 0.025299612285551273
+        },
+        "bootstrap_probability_difference_positive": 0.9319
+      },
+      "bertscore": {
+        "first_mean": 0.8574457764625549,
+        "second_mean": 0.8674545288085938,
+        "observed_difference": 0.010008802637457848,
+        "confidence_level": 0.95,
+        "confidence_interval": {
+          "lower": 0.0045512532349675896,
+          "upper": 0.015682161273434757
+        },
+        "bootstrap_probability_difference_positive": 0.9998
+      }
+    },
+    "base_vs_finetuned": {
+      "comparison": "Base vs NexaTune",
+      "n_examples": 100,
+      "n_bootstrap": 10000,
+      "seed": 42,
+      "rougeL": {
+        "first_mean": 0.21198429962857684,
+        "second_mean": 0.40821950208517666,
+        "observed_difference": 0.19623520245659978,
+        "confidence_level": 0.95,
+        "confidence_interval": {
+          "lower": 0.17506143061840107,
+          "upper": 0.21848522022263495
+        },
+        "bootstrap_probability_difference_positive": 1.0
+      },
+      "bertscore": {
+        "first_mean": 0.8574457764625549,
+        "second_mean": 0.9159747362136841,
+        "observed_difference": 0.05852893739938736,
+        "confidence_level": 0.95,
+        "confidence_interval": {
+          "lower": 0.05346720507368445,
+          "upper": 0.06380378026515246
+        },
+        "bootstrap_probability_difference_positive": 1.0
+      }
+    },
+    "prompted_vs_finetuned": {
+      "comparison": "Prompted Base vs NexaTune",
+      "n_examples": 100,
+      "n_bootstrap": 10000,
+      "seed": 42,
+      "rougeL": {
+        "first_mean": 0.22278369249978958,
+        "second_mean": 0.40821950208517666,
+        "observed_difference": 0.18543580958538702,
+        "confidence_level": 0.95,
+        "confidence_interval": {
+          "lower": 0.1639401619593599,
+          "upper": 0.20735324179071818
+        },
+        "bootstrap_probability_difference_positive": 1.0
+      },
+      "bertscore": {
+        "first_mean": 0.8674545288085938,
+        "second_mean": 0.9159747362136841,
+        "observed_difference": 0.04852013662457466,
+        "confidence_level": 0.95,
+        "confidence_interval": {
+          "lower": 0.043617242202162745,
+          "upper": 0.05345538137480616
+        },
+        "bootstrap_probability_difference_positive": 1.0
+      }
+    }
+  }
+}

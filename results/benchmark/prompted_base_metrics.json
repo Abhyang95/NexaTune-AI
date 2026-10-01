@@ -1,0 +1,21 @@
+{
+  "benchmark": {
+    "base_model": "Qwen/Qwen3-1.7B-Base",
+    "dataset_path": "data\\processed\\customer_support_sft",
+    "num_examples": 100,
+    "seed": 42,
+    "max_new_tokens": 128,
+    "do_sample": false
+  },
+  "prompted_base_model": {
+    "model": "Qwen3-1.7B-Base-Prompted",
+    "system_prompt": "You are a professional customer support assistant.\n\nAnswer the customer's question clearly and concisely.\n\nDo not invent order numbers, tracking numbers, refunds, account changes,\nor actions you cannot actually perform.\n\nIf information is missing, ask the customer for the required details.\n\nDo not claim that you performed an action unless the information explicitly\nconfirms that the action was completed.",
+    "rougeL_f1": 0.2228,
+    "bert_score_precision": 0.8728,
+    "bert_score_recall": 0.8627,
+    "bert_score_f1": 0.8675,
+    "average_latency_seconds": 7.4931,
+    "median_latency_seconds": 7.592,
+    "average_generated_tokens": 81.87
+  }
+}

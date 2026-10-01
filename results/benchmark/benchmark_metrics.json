@@ -1,0 +1,31 @@
+{
+  "benchmark": {
+    "base_model": "Qwen/Qwen3-1.7B-Base",
+    "adapter_path": "models\\final_adapter",
+    "dataset_path": "data\\processed\\customer_support_sft",
+    "num_examples": 100,
+    "seed": 42,
+    "max_new_tokens": 128,
+    "do_sample": false
+  },
+  "base_model": {
+    "model": "Qwen3-1.7B-Base",
+    "rougeL_f1": 0.212,
+    "bert_score_precision": 0.8591,
+    "bert_score_recall": 0.8563,
+    "bert_score_f1": 0.8574,
+    "average_latency_seconds": 9.2186,
+    "median_latency_seconds": 10.947,
+    "average_generated_tokens": 100.07
+  },
+  "fine_tuned_model": {
+    "model": "NexaTune-Qwen3-1.7B",
+    "rougeL_f1": 0.4082,
+    "bert_score_precision": 0.9233,
+    "bert_score_recall": 0.909,
+    "bert_score_f1": 0.916,
+    "average_latency_seconds": 15.4518,
+    "median_latency_seconds": 15.2244,
+    "average_generated_tokens": 99.93
+  }
+}
