@@ -2,10 +2,12 @@ import os
 import time
 from pathlib import Path
 
+from huggingface_hub import snapshot_download
+
+# ============================================================
 # Hugging Face ZeroGPU compatibility
-#
-# `spaces` is available on Hugging Face Spaces.
-# Locally it may not be installed, so we provide a no-op fallback.
+# ============================================================
+
 try:
     import spaces
 except ImportError:
@@ -44,12 +46,61 @@ from api.capability_guardrail import (
 
 BASE_MODEL = "Qwen/Qwen3-1.7B-Base"
 
-ADAPTER_PATH = Path(
+ADAPTER_REPO = os.getenv(
+    "NEXATUNE_ADAPTER_REPO",
+    "abhyang95/nexatune-qwen3-1.7b-adapter",
+)
+
+LOCAL_ADAPTER_PATH = Path(
     os.getenv(
         "NEXATUNE_ADAPTER_PATH",
         "models/final_adapter",
     )
 )
+
+USE_HF_ADAPTER = (
+    os.getenv(
+        "NEXATUNE_USE_HF_ADAPTER",
+        "false",
+    ).lower()
+    == "true"
+)
+
+
+# ============================================================
+# Adapter resolution
+# ============================================================
+
+def resolve_adapter_path() -> Path:
+    """
+    Resolve the NexaTune LoRA adapter.
+
+    Local development:
+        models/final_adapter
+
+    Hugging Face Space:
+        Downloads the adapter from the Hugging Face Hub.
+    """
+
+    if USE_HF_ADAPTER:
+        logger.info(
+            "Downloading NexaTune adapter from Hugging Face Hub: %s",
+            ADAPTER_REPO,
+        )
+
+        downloaded_path = snapshot_download(
+            repo_id=ADAPTER_REPO,
+            repo_type="model",
+        )
+
+        logger.info(
+            "NexaTune adapter downloaded to: %s",
+            downloaded_path,
+        )
+
+        return Path(downloaded_path)
+
+    return LOCAL_ADAPTER_PATH
 
 
 # ============================================================
@@ -60,7 +111,7 @@ class NexaTuneInference:
     """
     NexaTune QLoRA inference service.
 
-    Designed to support:
+    Supports:
 
     1. Local FastAPI inference
     2. Hugging Face ZeroGPU Gradio inference
@@ -84,9 +135,8 @@ class NexaTuneInference:
         """
         Determine the device used for inference.
 
-        ZeroGPU requires CUDA.
-        Local development uses CUDA when available and
-        otherwise falls back to CPU.
+        ZeroGPU uses CUDA during GPU allocation.
+        Local development uses CUDA when available.
         """
 
         if torch.cuda.is_available():
@@ -112,6 +162,12 @@ class NexaTuneInference:
             )
             return
 
+        # ----------------------------------------------------
+        # Resolve adapter
+        # ----------------------------------------------------
+
+        adapter_path = resolve_adapter_path()
+
         logger.info(
             "Loading NexaTune inference model"
         )
@@ -123,20 +179,22 @@ class NexaTuneInference:
 
         logger.info(
             "Adapter path: %s",
-            ADAPTER_PATH,
+            adapter_path,
         )
 
-        if not ADAPTER_PATH.exists():
+        if not adapter_path.exists():
             logger.error(
                 "NexaTune adapter not found at: %s",
-                ADAPTER_PATH,
+                adapter_path,
             )
 
             raise FileNotFoundError(
                 f"NexaTune adapter not found at:\n"
-                f"{ADAPTER_PATH}\n\n"
-                "Set NEXATUNE_ADAPTER_PATH or place the adapter "
-                "inside models/final_adapter."
+                f"{adapter_path}\n\n"
+                "For local development, place the adapter "
+                "inside models/final_adapter.\n"
+                "For Hugging Face Spaces, set "
+                "NEXATUNE_USE_HF_ADAPTER=true."
             )
 
         logger.info(
@@ -180,17 +238,6 @@ class NexaTuneInference:
         # Base model
         # ----------------------------------------------------
 
-        #
-        # ZeroGPU:
-        #   The current HF ZeroGPU runtime supports loading
-        #   CUDA-backed models during startup and manages the
-        #   actual GPU allocation for @spaces.GPU calls.
-        #
-        # Local:
-        #   device_map="auto" allows Accelerate to place the
-        #   quantized model appropriately.
-        #
-
         base_model = AutoModelForCausalLM.from_pretrained(
             BASE_MODEL,
             quantization_config=quantization_config,
@@ -204,7 +251,7 @@ class NexaTuneInference:
 
         self.model = PeftModel.from_pretrained(
             base_model,
-            str(ADAPTER_PATH),
+            str(adapter_path),
         )
 
         self.model.eval()
@@ -236,8 +283,7 @@ class NexaTuneInference:
         On Hugging Face ZeroGPU, this function receives
         temporary GPU allocation.
 
-        Locally, @spaces.GPU is a no-op and generation
-        runs normally on the local machine.
+        Locally, @spaces.GPU is a no-op.
         """
 
         if self.model is None:
@@ -250,10 +296,6 @@ class NexaTuneInference:
             return_tensors="pt",
         )
 
-        # Move inputs to the same device used by the model.
-        #
-        # For ZeroGPU this resolves to CUDA when the
-        # decorated function is executing.
         inputs = {
             key: value.to(self.model.device)
             for key, value in inputs.items()
@@ -294,17 +336,8 @@ class NexaTuneInference:
         max_new_tokens: int = 256,
     ):
         """
-        Generate a customer-support response and apply the
-        NexaTune capability guardrail.
-
-        Returns:
-            dict containing:
-
-            - response
-            - guardrail_flagged
-            - guardrail_matches
-            - guardrail_categories
-            - original_response
+        Generate a customer-support response and apply
+        the NexaTune capability guardrail.
         """
 
         if not self.loaded:

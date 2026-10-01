@@ -1,0 +1,7 @@
+gradio==6.28.0
+spaces
+accelerate==1.15.0
+bitsandbytes==0.50.2
+peft==0.21.0
+safetensors==0.8.0
+transformers==5.17.0
