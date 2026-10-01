@@ -1,3 +1,4 @@
+import os
 import time
 
 from fastapi import FastAPI, HTTPException, Request
@@ -9,13 +10,48 @@ from api.schemas import (
     GenerateRequest,
     GenerateResponse,
 )
-
 from api.inference_service import inference_service
 from api.logging_config import configure_logging, logger
 
 
+# ============================================================
+# Configuration
+# ============================================================
+
 configure_logging()
 
+
+def get_cors_origins() -> list[str]:
+    """
+    Read allowed CORS origins from the environment.
+
+    Example:
+        NEXATUNE_CORS_ORIGINS=http://localhost:7860,http://127.0.0.1:7860
+
+    If the environment variable is not set, preserve the
+    existing local Gradio development configuration.
+    """
+
+    configured_origins = os.getenv(
+        "NEXATUNE_CORS_ORIGINS",
+        "http://localhost:7860,http://127.0.0.1:7860",
+    )
+
+    origins = [
+        origin.strip()
+        for origin in configured_origins.split(",")
+        if origin.strip()
+    ]
+
+    return origins
+
+
+CORS_ORIGINS = get_cors_origins()
+
+
+# ============================================================
+# FastAPI Application
+# ============================================================
 
 app = FastAPI(
     title="NexaTune AI API",
@@ -23,6 +59,10 @@ app = FastAPI(
     version="1.0.0",
 )
 
+
+# ============================================================
+# Exception Handling
+# ============================================================
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(
@@ -47,20 +87,28 @@ async def validation_exception_handler(
     )
 
 
+# ============================================================
+# CORS
+# ============================================================
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:7860",
-        "http://127.0.0.1:7860",
-    ],
+    allow_origins=CORS_ORIGINS,
     allow_credentials=False,
     allow_methods=["GET", "POST"],
     allow_headers=["Content-Type"],
 )
 
 
+# ============================================================
+# Request Logging
+# ============================================================
+
 @app.middleware("http")
-async def log_requests(request: Request, call_next):
+async def log_requests(
+    request: Request,
+    call_next,
+):
     start_time = time.perf_counter()
 
     try:
@@ -91,10 +139,23 @@ async def log_requests(request: Request, call_next):
         raise
 
 
+# ============================================================
+# Startup
+# ============================================================
+
 @app.on_event("startup")
 def startup_event():
+    logger.info(
+        "NexaTune API startup | CORS origins=%s",
+        CORS_ORIGINS,
+    )
+
     inference_service.load()
 
+
+# ============================================================
+# Health Check
+# ============================================================
 
 @app.get("/health")
 def health():
@@ -104,6 +165,10 @@ def health():
         "model_loaded": inference_service.loaded,
     }
 
+
+# ============================================================
+# Model Information
+# ============================================================
 
 @app.get("/model-info")
 def model_info():
@@ -116,11 +181,16 @@ def model_info():
     }
 
 
+# ============================================================
+# Generation
+# ============================================================
+
 @app.post(
     "/generate",
     response_model=GenerateResponse,
 )
 def generate(request: GenerateRequest):
+
     if not inference_service.loaded:
         raise HTTPException(
             status_code=503,
