@@ -1,13 +1,30 @@
+import sys
+from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
 import html
-import requests
+
+import spaces
 import gradio as gr
+
+from api.inference_service import inference_service
 
 
 # ============================================================
 # CONFIG
 # ============================================================
 
-API_URL = "http://127.0.0.1:8000"
+SPACE_MODE = True
+
+# Load the model at module scope.
+#
+# Hugging Face ZeroGPU uses CUDA emulation during startup so
+# model weights can be prepared before a real GPU is allocated.
+inference_service.load()
 
 
 # ============================================================
@@ -1328,7 +1345,7 @@ def nav_html():
 
         <div class="nav-meta">
             <span class="status-dot"></span>
-            <span>Local inference</span>
+            <span>ZeroGPU  inference</span>
         </div>
 
     </div>
@@ -1410,7 +1427,7 @@ def workspace_html():
             </div>
 
             <div class="section-label">
-                Live local model
+                Live ZeroGPU model
             </div>
 
         </div>
@@ -1514,7 +1531,7 @@ def evaluation_html():
                 </div>
 
                 <div class="metric-ci">
-                    Local inference measurement
+                    Benchmark inference measurement
                 </div>
 
             </div>
@@ -1681,7 +1698,7 @@ def evaluation_html():
             <strong>Engineering trade-off ·</strong>
 
             Fine-tuning improved benchmark similarity and semantic quality
-            while increasing measured local inference latency.
+            while increasing measured benchmark inference latency.
 
             Output length remained essentially unchanged
             (100.1 → 99.9 tokens), so the quality change was not driven by
@@ -1777,9 +1794,9 @@ def pipeline_html():
                 </div>
 
                 <div class="pipeline-copy">
-                    FastAPI<br>
-                    Qwen3-1.7B + adapter
-                </div>
+    Gradio + ZeroGPU<br>
+    Qwen3-1.7B + adapter
+</div>
 
             </div>
 
@@ -2000,11 +2017,11 @@ def config_html():
                 </div>
 
                 <div class="config-row">
-                    <span class="config-key">Serving</span>
-                    <span class="config-value">
-                        FastAPI + adapter
-                    </span>
-                </div>
+    <span class="config-key">Serving</span>
+    <span class="config-value">
+        ZeroGPU + Gradio
+    </span>
+</div>
 
             </div>
 
@@ -2224,13 +2241,13 @@ def facts_html():
                     SERVING
                 </div>
 
-                <div class="fact-value">
-                    FastAPI
-                </div>
+               <div class="fact-value">
+    ZeroGPU
+</div>
 
-                <div class="fact-description">
-                    QLoRA + guardrail inference
-                </div>
+<div class="fact-description">
+    Gradio + QLoRA + guardrail
+</div>
 
             </div>
 
@@ -2254,50 +2271,31 @@ def footer_html():
         </span>
 
         <span>
-            Python · QLoRA · PEFT · FastAPI · Gradio
+            Python · QLoRA · PEFT · Gradio · ZeroGPU
         </span>
 
     </div>
     """
 
 
-# ============================================================
-# API HEALTH
-# ============================================================
 
-def check_api():
-    try:
-
-        response = requests.get(
-            f"{API_URL}/health",
-            timeout=5,
-        )
-
-        if response.status_code == 200:
-
-            data = response.json()
-
-            if data.get("model_loaded"):
-                return "ONLINE · MODEL LOADED"
-
-            return "ONLINE · MODEL NOT LOADED"
-
-        return f"API ERROR · {response.status_code}"
-
-    except requests.exceptions.ConnectionError:
-
-        return "SYSTEM OFFLINE · START FASTAPI"
-
-    except Exception:
-
-        return "SYSTEM CHECK FAILED"
 
 
 # ============================================================
 # INFERENCE
 # ============================================================
 
+@spaces.GPU(duration=45)
 def generate_response(message):
+    """
+    Run NexaTune inference directly inside the Hugging Face
+    ZeroGPU environment.
+
+    The actual model generation is handled by the inference
+    service. The service itself also contains the GPU-decorated
+    generation method, while this outer decorator ensures the
+    Gradio event receives a ZeroGPU allocation.
+    """
 
     if not message or not message.strip():
 
@@ -2318,107 +2316,65 @@ def generate_response(message):
         """
 
 
+    message = message.strip()
+
+
+    # --------------------------------------------------------
+    # Input validation
+    # --------------------------------------------------------
+
+    if len(message) > 4000:
+
+        return """
+        <div class="response-status flagged">
+
+            <span>●</span>
+
+            REQUEST REJECTED
+
+        </div>
+
+        <div class="response-content">
+
+            Customer message must be between
+            1 and 4000 characters.
+
+        </div>
+        """
+
+
     try:
 
-        response = requests.post(
+        # ----------------------------------------------------
+        # Direct in-process inference
+        # ----------------------------------------------------
 
-            f"{API_URL}/generate",
-
-            json={
-                "message": message.strip()
-            },
-
-            timeout=120,
-
+        result = inference_service.generate(
+            message,
+            max_new_tokens=256,
         )
 
 
-        # ----------------------------------------------------
-        # VALIDATION ERROR
-        # ----------------------------------------------------
-
-        if response.status_code == 422:
-
-            try:
-
-                data = response.json()
-
-                detail = data.get(
-                    "detail",
-                    "Invalid request.",
-                )
-
-            except Exception:
-
-                detail = "Invalid request."
-
-
-            return f"""
-            <div class="response-status flagged">
-
-                <span>●</span>
-
-                REQUEST REJECTED
-
-            </div>
-
-            <div class="response-content">
-
-                {html.escape(str(detail))}
-
-            </div>
-            """
-
-
-        # ----------------------------------------------------
-        # MODEL UNAVAILABLE
-        # ----------------------------------------------------
-
-        if response.status_code == 503:
-
-            return """
-            <div class="response-status flagged">
-
-                <span>●</span>
-
-                MODEL UNAVAILABLE
-
-            </div>
-
-            <div class="response-content">
-
-                The inference model is not currently available.
-
-            </div>
-            """
-
-
-        response.raise_for_status()
-
-
-        data = response.json()
-
-
-        generated = data.get(
+        generated = result.get(
             "response",
             "No response returned.",
         )
 
 
-        flagged = data.get(
+        flagged = result.get(
             "guardrail_flagged",
             False,
         )
 
 
-        categories = data.get(
+        categories = result.get(
             "guardrail_categories",
             [],
         )
 
 
         # ----------------------------------------------------
-        # GUARDRAIL TRIGGERED
+        # Guardrail triggered
         # ----------------------------------------------------
 
         if flagged:
@@ -2472,7 +2428,7 @@ def generate_response(message):
 
 
         # ----------------------------------------------------
-        # NORMAL RESPONSE
+        # Normal response
         # ----------------------------------------------------
 
         return f"""
@@ -2493,47 +2449,6 @@ def generate_response(message):
         """
 
 
-    except requests.exceptions.ConnectionError:
-
-        return """
-        <div class="response-status flagged">
-
-            <span>●</span>
-
-            SYSTEM OFFLINE
-
-        </div>
-
-
-        <div class="response-content">
-
-            Start FastAPI on 127.0.0.1:8000 before running inference.
-
-        </div>
-        """
-
-
-    except requests.exceptions.Timeout:
-
-        return """
-        <div class="response-status flagged">
-
-            <span>●</span>
-
-            INFERENCE TIMEOUT
-
-        </div>
-
-
-        <div class="response-content">
-
-            The model took too long to respond.
-            Check the FastAPI terminal for inference logs.
-
-        </div>
-        """
-
-
     except Exception as exc:
 
         return f"""
@@ -2541,7 +2456,7 @@ def generate_response(message):
 
             <span>●</span>
 
-            REQUEST FAILED
+            INFERENCE FAILED
 
         </div>
 
@@ -2895,15 +2810,8 @@ with gr.Blocks(
 # ============================================================
 # LAUNCH
 # ============================================================
-
 if __name__ == "__main__":
 
     demo.launch(
-
-        server_name="127.0.0.1",
-
-        server_port=7860,
-
         show_error=True,
-
     )
