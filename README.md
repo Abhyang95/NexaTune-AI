@@ -186,72 +186,40 @@ Guardrails
 
 ---
 
-# Architecture
 
-```text
-┌───────────────────────────────────────────────┐
-│ Customer Support Dataset                      │
-│ 26,872 examples                               │
-└──────────────────────┬────────────────────────┘
-                       ↓
-┌───────────────────────────────────────────────┐
-│ Data Validation                               │
-│ Missing values / duplicates / quality checks  │
-└──────────────────────┬────────────────────────┘
-                       ↓
-┌───────────────────────────────────────────────┐
-│ Leakage-Aware Splitting                       │
-│ Instruction-grouped train / validation / test│
-└──────────────────────┬────────────────────────┘
-                       ↓
-┌───────────────────────────────────────────────┐
-│ SFT Formatting                                │
-│ Customer → Assistant                          │
-└──────────────────────┬────────────────────────┘
-                       ↓
-┌───────────────────────────────────────────────┐
-│ Qwen/Qwen3-1.7B-Base                          │
-└──────────────────────┬────────────────────────┘
-                       ↓
-┌───────────────────────────────────────────────┐
-│ QLoRA + PEFT + SFT                            │
-│ 4-bit NF4                                    │
-│ LoRA r=16, alpha=32                           │
-└──────────────────────┬────────────────────────┘
-                       ↓
-┌───────────────────────────────────────────────┐
-│ LoRA Adapter                                  │
-│ ~24.5 MB                                      │
-└──────────────────────┬────────────────────────┘
-                       ↓
-        ┌──────────────┴──────────────┐
-        ↓                             ↓
-┌───────────────────────┐   ┌───────────────────────┐
-│ Deterministic         │   │ Qualitative           │
-│ Benchmark             │   │ Failure Analysis      │
-└───────────┬───────────┘   └───────────┬───────────┘
-            ↓                           ↓
-┌───────────────────────┐   ┌───────────────────────┐
-│ Bootstrap CI          │   │ AI-Assisted           │
-│ 10,000 Resamples      │   │ LLM-as-Judge          │
-└───────────┬───────────┘   └───────────┬───────────┘
-            └──────────────┬─────────────┘
-                           ↓
-                ┌───────────────────────┐
-                │ FastAPI Inference API │
-                └───────────┬───────────┘
-                            ↓
-                ┌───────────────────────┐
-                │ Capability Guardrail  │
-                │ Detect → Replace      │
-                └───────────┬───────────┘
-                            ↓
-                ┌───────────────────────┐
-                │ Gradio Product UI     │
-                └───────────────────────┘
-```
+flowchart TD
+    A["Customer Support Dataset<br/>26,872 examples"]
+    B["Data Engineering<br/>Validation · Deduplication · Grouped Split"]
+    C["SFT Formatting & Token Analysis"]
+    D["Qwen/Qwen3-1.7B-Base"]
+    E["QLoRA Fine-Tuning<br/>4-bit NF4 · LoRA r=16 · PEFT"]
+    F["Final LoRA Adapter<br/>~24.5 MB"]
+    
+    G["Benchmark Evaluation<br/>ROUGE-L · BERTScore · Latency"]
+    H["Statistical Validation<br/>10,000 Paired Bootstrap Resamples"]
+    I["AI-Assisted LLM-as-Judge<br/>Qualitative Failure Analysis"]
+    
+    J["FastAPI Inference API"]
+    K["Capability Guardrails<br/>Detect → Replace"]
+    L["Gradio Product UI"]
 
----
+    A --> B --> C --> D --> E --> F
+    F --> G
+    G --> H
+    G --> I
+    F --> J
+    J --> K --> L
+
+    classDef data fill:#E8F1FF,stroke:#3973AC,color:#172B4D
+    classDef training fill:#E8F7EE,stroke:#278453,color:#123D29
+    classDef evaluation fill:#FFF2D9,stroke:#C58A19,color:#583B05
+    classDef serving fill:#F0E8FF,stroke:#8253B5,color:#382052
+
+    class A,B,C data
+    class D,E,F training
+    class G,H,I evaluation
+    class J,K,L serving
+
 
 # End-to-End Workflow
 
