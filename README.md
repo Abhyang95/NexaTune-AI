@@ -318,7 +318,7 @@ This is important because a conventional random row-level split could place the 
 
 ### Token-length analysis
 
-<<<<<<< HEAD
+
 NexaTune intentionally focuses on **model adaptation rather than retrieval**.
 
 This gives the project a different role from a separate RAG/agentic project in the portfolio.
@@ -334,69 +334,6 @@ Tools / APIs
       +
 Guardrails
 ```
-
-Architecture
-┌───────────────────────────────────────────────┐
-│ Customer Support Dataset                      │
-│ 26,872 examples                               │
-└──────────────────────┬────────────────────────┘
-                       ↓
-┌───────────────────────────────────────────────┐
-│ Data Validation                               │
-│ Missing values / duplicates / quality checks  │
-└──────────────────────┬────────────────────────┘
-                       ↓
-┌───────────────────────────────────────────────┐
-│ Leakage-Aware Splitting                       │
-│ Instruction-grouped train / validation / test│
-└──────────────────────┬────────────────────────┘
-                       ↓
-┌───────────────────────────────────────────────┐
-│ SFT Formatting                                │
-│ Customer → Assistant                          │
-└──────────────────────┬────────────────────────┘
-                       ↓
-┌───────────────────────────────────────────────┐
-│ Qwen/Qwen3-1.7B-Base                          │
-└──────────────────────┬────────────────────────┘
-                       ↓
-┌───────────────────────────────────────────────┐
-│ QLoRA + PEFT + SFT                            │
-│ 4-bit NF4                                    │
-│ LoRA r=16, alpha=32                           │
-└──────────────────────┬────────────────────────┘
-                       ↓
-┌───────────────────────────────────────────────┐
-│ LoRA Adapter                                  │
-│ ~24.5 MB                                      │
-└──────────────────────┬────────────────────────┘
-                       ↓
-        ┌──────────────┴──────────────┐
-        ↓                             ↓
-┌───────────────────────┐   ┌───────────────────────┐
-│ Deterministic         │   │ Qualitative           │
-│ Benchmark             │   │ Failure Analysis      │
-└───────────┬───────────┘   └───────────┬───────────┘
-            ↓                           ↓
-┌───────────────────────┐   ┌───────────────────────┐
-│ Bootstrap CI          │   │ AI-Assisted           │
-│ 10,000 Resamples      │   │ LLM-as-Judge          │
-└───────────┬───────────┘   └───────────┬───────────┘
-            └──────────────┬─────────────┘
-                           ↓
-                ┌───────────────────────┐
-                │ FastAPI Inference API │
-                └───────────┬───────────┘
-                            ↓
-                ┌───────────────────────┐
-                │ Capability Guardrail  │
-                │ Detect → Replace      │
-                └───────────┬───────────┘
-                            ↓
-                ┌───────────────────────┐
-                │ Gradio Product UI     │
-                └───────────────────────┘
-
 
 # End-to-End Workflow
 
@@ -544,10 +481,9 @@ This format is used during supervised fine-tuning and benchmark generation.
 
 Token-length analysis was performed before selecting the training sequence length.
 
-Observed training distribution:
-=======
+
 The inspected token-length distribution is:
->>>>>>> 431f685 (Improve README documentation and architecture)
+
 
 | Statistic | Tokens |
 |---|---:|
