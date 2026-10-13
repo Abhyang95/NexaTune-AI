@@ -1,26 +1,4 @@
-<<<<<<< HEAD
-NexaTune AI
 
-Domain-Adaptive LLM Fine-Tuning & Evaluation Platform
-
-An end-to-end LLM fine-tuning and evaluation platform that adapts an open-source language model to customer-support conversations using QLoRA, LoRA, PEFT, and supervised fine-tuning (SFT).
-
-<p align="center">
-  <a href="https://github.com/Abhyang95/NexaTune-AI"><strong>GitHub Repository</strong></a>
-</p>
-
-<p align="center">
-  <a href="https://www.python.org/"><img src="https://img.shields.io/badge/Python-3.11-blue?logo=python&logoColor=white" alt="Python 3.11"></a>
-  <a href="https://pytorch.org/"><img src="https://img.shields.io/badge/PyTorch-Deep%20Learning-EE4C2C?logo=pytorch&logoColor=white" alt="PyTorch"></a>
-  <a href="https://huggingface.co/docs/transformers/"><img src="https://img.shields.io/badge/Hugging%20Face-Transformers-FFD21E?logo=huggingface&logoColor=black" alt="Transformers"></a>
-  <a href="https://huggingface.co/docs/peft/"><img src="https://img.shields.io/badge/PEFT-LoRA%20%7C%20QLoRA-8A2BE2" alt="PEFT LoRA QLoRA"></a>
-  <a href="https://huggingface.co/docs/trl/"><img src="https://img.shields.io/badge/TRL-Supervised%20Fine--Tuning-FF9D00" alt="TRL"></a>
-  <a href="https://huggingface.co/docs/bitsandbytes/"><img src="https://img.shields.io/badge/bitsandbytes-4--bit%20NF4-00A67D" alt="bitsandbytes"></a>
-  <a href="https://fastapi.tiangolo.com/"><img src="https://img.shields.io/badge/FastAPI-Inference%20API-009688?logo=fastapi&logoColor=white" alt="FastAPI"></a>
-  <a href="https://www.gradio.app/"><img src="https://img.shields.io/badge/Gradio-Interactive%20UI-F97316?logo=gradio&logoColor=white" alt="Gradio"></a>
-</p>
-
-=======
 # NexaTune AI — Domain-Adaptive LLM Fine-Tuning & Evaluation Platform
 
 **An end-to-end platform for fine-tuning, benchmarking, and serving domain-adapted language models for customer-support response generation.**
@@ -31,7 +9,7 @@ An end-to-end LLM fine-tuning and evaluation platform that adapts an open-source
 [![QLoRA](https://img.shields.io/badge/Fine--Tuning-QLoRA%20%7C%20LoRA-8A2BE2)](https://arxiv.org/abs/2305.14314)
 [![FastAPI](https://img.shields.io/badge/API-FastAPI-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![Gradio](https://img.shields.io/badge/UI-Gradio-F97316)](https://www.gradio.app/)
->>>>>>> 431f685 (Improve README documentation and architecture)
+
 
 **Repository:** [Abhyang95/NexaTune-AI](https://github.com/Abhyang95/NexaTune-AI)
 
