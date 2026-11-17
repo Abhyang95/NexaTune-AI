@@ -12,6 +12,11 @@
 
 
 **Repository:** [Abhyang95/NexaTune-AI](https://github.com/Abhyang95/NexaTune-AI)
+## 🚀 Live Demo
+
+Try NexaTune AI directly on Hugging Face Spaces:
+
+[![Hugging Face Spaces](https://img.shields.io/badge/🤗%20Hugging%20Face-Live%20Demo-yellow?style=for-the-badge)](https://huggingface.co/spaces/abhyang95/nexatune)
 
 ---
 
